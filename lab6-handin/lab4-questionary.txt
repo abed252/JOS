@@ -1,0 +1,112 @@
+=== This template file contains questions you need to answer.
+=== Fill your answers on appropriate blank lines only.
+=== Don't start any line with three equal signs "===".
+=== Don't edit any lines starting from three equal signs.
+=== Use C notation to write numbers: 42 for decimal, 0x2a for hexadecimal.
+=== We may check most of the answers automatically, so "forty two" or
+=== "26+16" won't work for this example. Spaces are mostly ignored, so
+=== "  42  " is OK (without quotes of course). 
+=== When asked to specify address & instruction, do it in the form of
+=== gdb output "ADDRESS: INSTRUCTION", for example "0x7c26:  or  $0x1,%eax"
+=== Don't make lines longer than 80 characters. You don't need to fit your
+=== answer in a single line, you can start a new line at will.
+=== However, when asked to fill "a table" make each table raw a singleline.
+
+
+
+=== Q Compare kern/mpentry.S side by side with boot/boot.S. Bearing in
+===   mind that kern/mpentry.S is compiled and linked to run above KERNBASE
+===   just like everything else in the kernel, what is the purpose of macro
+===   MPBOOTPHYS? Why is it necessary in kern/mpentry.S but not in
+===   boot/boot.S? In other words, what could go wrong if it were
+===   omitted in kern/mpentry.S?
+===   (free form)
+MPBOOTPHYS converts the high (link-time) kernel addresses in mpentry.S to the
+low physical addresses where the AP bootstrap code is actually copied; without
+it an AP would jump to an unmapped high address and triple-fault.
+
+
+
+=== Q It seems that using the big kernel lock guarantees that only one
+===   CPU can run the kernel code at a time. Why do we still need
+===   separate kernel stacks for each CPU? Describe a scenario in
+===   which using a shared kernel stack will go wrong, even with the
+===   protection of the big kernel lock.
+===   (free form)
+Even with the big kernel lock several CPUs can trap or take an interrupt while
+inside the kernel. If they all used one stack these simultaneous traps would
+overwrite each other’s frames and corrupt the stack.
+
+
+
+=== Q Whenever the kernel switches from one environment to another, it
+===   must ensure the old environment's registers are saved so they
+===   can be restored properly later. Where does this happen?
+===   (JOS function name)
+trap() 
+
+
+
+
+=== Q In your implementation of env_run() you should have called
+===   lcr3(). Before and after the call to lcr3(), your code makes
+===   references (at least it should) to the variable e, the argument
+===   to env_run. Upon loading the %cr3 register, the addressing
+===   context used by the MMU is instantly changed. But a virtual
+===   address (namely e) has meaning relative to a given address 
+===   context--the address context specifies the physical address to
+===   which the virtual address maps. Why can the pointer e be
+===   dereferenced both before and after the addressing switch?
+===   (one sentence, free form)
+The kernel (everything above KERNBASE) is mapped at the same virtual addresses
+in every address space, so the pointer e is valid before and after lcr3.
+
+
+
+
+=== Q In Ex. 9, what happens if the user environment runs out of
+===   space on the exception stack?
+===   (one setence, free form)
+If the user exhausts the exception stack a second page-fault occurs while
+trying to push the new UTrapframe; the kernel cannot deliver it and kills the
+environment.
+
+
+
+
+=== Q In dumpfork.c, the first time you call duppage(), the function
+===   allocates a page in one environment (env A) and then maps it in
+===   another (env B). At what address is the page mapped in env A, and
+===   at what address is it mapped in env B?
+===   (ADDR(in env A):ADDR(in env B) (example: 0xAAAAAAAA:0xBBBBBBBB)
+0xEFFFF000 : 0x00000000
+
+
+
+
+====================================================================
+=== Q What challenge(s) have you chosen to implement? (specify
+===   challenge numbers separated by spaces, if more than one)
+2
+=== Q If the challenge requires changing the kernel source, list the
+===   files which you have changed/added during implementation.
+===   (one file per line, relative to lab directory containing .git/)
+inc/env.h
+kern/sched.c
+kern/syscall.c
+inc/lib.h
+kern/Makefrag
+inc/syscall.h
+lib/fork.c
+lib/syscall.c
+user/priority.c
+=== Q Describe you solution.
+===   (free form, up to 500 words, don't need to use all 500!)
+I added a new syscall, SYS_set_priority, by assigning it a number in inc/syscall.h and declaring a user‐level wrapper sys_set_priority(int) in inc/lib.h.
+I implemented the stub in lib/syscall.c to trap into the kernel.
+On the kernel side I wrote sys_set_priority(int pri) to validate the range 0 ≤ pri ≤ 10 and store the priority in curenv->env_pri.
+I wired that handler into the syscall dispatcher in kern/syscall.c under case SYS_set_priority.
+I modified sched_yield() in kern/sched.c so it scans all ENV_RUNNABLE environments, picks the one with the highest env_pri, and calls env_run() on it.
+If no runnable env beats the current one, it re-runs curenv if still ENV_RUNNING, or falls back to sched_halt().
+Finally, I wrote user/priority_test.c, which forks three children at priorities 1, 3, and 5 using pfork(pr), has each child loop and yield while printing its ID and iteration count, and lets the parent yield and print its own status.
+Running this test shows the pri-5 child running to completion before pri-3, which in turn preempts pri-1, and only then does the parent (pri-0) resume—confirming the fixed-priority scheduler works correctly.
