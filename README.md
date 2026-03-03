@@ -123,7 +123,7 @@ If you are currently taking the course, ensure you follow your university’s ac
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Authors
 
-Abed Alhady Egbaria  
+Abed Alhady Egbaria, Kareem Abo Gazala
 B.Sc Computer Science — Technion
