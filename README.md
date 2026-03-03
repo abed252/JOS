@@ -1,12 +1,15 @@
-# JOS Operating System — OSE Labs (Technion)
+# JOS Operating System — x86 Kernel Implementation
 
-Educational x86 operating system developed as part of the  
-**Operating Systems Engineering (OSE)** course.
+A teaching operating system developed as part of the Technion Operating Systems Engineering (OSE) course.
 
-This repository contains my completed implementation of Labs 1–6
-based on the MIT JOS teaching OS, including memory management,
-process abstraction, scheduling, file system, and networking.
+This project implements core OS components including:
+- Virtual memory & paging
+- User-level environments
+- Preemptive scheduling
+- File system
+- Networking stack
 
+~10K lines of C and x86 assembly.
 ---
 
 ## 🚀 Features Implemented
